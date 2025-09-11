@@ -14,10 +14,53 @@ pacman::p_load(tidyverse)
 
 ```{r}
 # data
-abalone_data <- read_csv("hw1/abalone/abalone.data")
+abalone_data <- read.csv("hw1/abalone/abalone.data", header = F) %>% `colnames<-`(c(
+    "sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"
+))
 ```
 
 ### Part B
+
 ```{r}
-table(abalone_data$M)
+table(abalone_data$sex)
 ```
+
+### Part C
+
+#### 1.
+
+```{r}
+weight_names <- c("whole_weight", "shucked_weight", "viscera_weight", "shell_weight")
+weights <- abalone_data[, weight_names]
+cor(weights, abalone_data$rings)
+```
+
+The weight with the highest correlation with the rings is Shell Weight (R = 0.6275740).
+
+#### 2.
+
+```{r}
+
+```
+
+#### 3.
+
+```{r}
+abalone_data[abalone_data$rings == max(abalone_data$rings), c(weight_names, "rings")]
+```
+
+The abalone with the most rings (29) had the following weights:
+
+-   whole: 1.8075
+-   shucked: 0.7055
+-   viscera: 0.3215
+-   shell: 0.475
+
+#### 4. 
+```{r}
+mean(abalone_data$viscera_weight > abalone_data$shell_weight) * 100
+# we can use mean here as the input is a vector of TRUE, FALSE which R will treat as 1, 0 
+# thus mean is equivalent the summing the TRUE entries over all observations
+```
+
+About 6.51% of abalones have a viscera weight larger than shell weight.
