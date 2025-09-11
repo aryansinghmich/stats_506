@@ -1,33 +1,38 @@
 ---
 title: "Problem Set 1"
-format: pdf
+author: "Aryan Singh"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
 ---
 
-## Problem 1
+# Problem 1
 
 ```{r}
 # environment set up
+setwd("/Users/aryansingh/Desktop/stats_506_git/hw1")
 pacman::p_load(tidyverse)
 ```
 
-### Part A
+## Part A
 
 ```{r}
 # data
-abalone_data <- read.csv("hw1/abalone/abalone.data", header = F) %>% `colnames<-`(c(
+abalone_data <- read.csv("abalone/abalone.data", header = F) %>% `colnames<-`(c(
     "sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"
 ))
 ```
 
-### Part B
+## Part B
 
 ```{r}
 table(abalone_data$sex)
 ```
 
-### Part C
+## Part C
 
-#### 1.
+### 1.
 
 ```{r}
 weight_names <- c("whole_weight", "shucked_weight", "viscera_weight", "shell_weight")
@@ -37,13 +42,11 @@ cor(weights, abalone_data$rings)
 
 The weight with the highest correlation with the rings is Shell Weight (R = 0.6275740).
 
-#### 2.
+### 2.
 
-```{r}
+From cor_table (see below, Part D), for Shell Weight, the sex of I has the highest correlation (0.725).
 
-```
-
-#### 3.
+### 3.
 
 ```{r}
 abalone_data[abalone_data$rings == max(abalone_data$rings), c(weight_names, "rings")]
@@ -56,11 +59,78 @@ The abalone with the most rings (29) had the following weights:
 -   viscera: 0.3215
 -   shell: 0.475
 
-#### 4. 
+### 4. 
 ```{r}
-mean(abalone_data$viscera_weight > abalone_data$shell_weight) * 100
 # we can use mean here as the input is a vector of TRUE, FALSE which R will treat as 1, 0 
 # thus mean is equivalent the summing the TRUE entries over all observations
+mean(abalone_data$viscera_weight > abalone_data$shell_weight) * 100
 ```
 
 About 6.51% of abalones have a viscera weight larger than shell weight.
+
+## Part D
+```{r}
+cor_table <- abalone_data %>% group_by(sex) %>% summarise(across(all_of(weight_names), ~ cor(.x, rings), .names = "{.col}")) %>% ungroup()
+cor_table
+```
+
+## Part E
+```{r}
+# M vs F
+t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "F")))
+# M vs I
+t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "I")))
+# F vs I
+t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("F", "I")))
+```
+
+# Problem 2
+
+## Part A
+```{r}
+
+```
+
+# Problem 3 - Collatz conjecture
+
+## Part A
+```{r}
+nextCollatz <- function(num){
+    if (!is.numeric(num)) {
+        stop("Input was not numeric")
+    } else if (num < 1) {
+        stop("Input was not positive")
+    } else if (num %% 1 != 0) {
+        stop("Input was not an integer")
+    }
+
+    if (num %% 2 == 0) {
+        return(num/2)
+    } else {
+        return(3*num + 1)
+    }
+}
+
+nextCollatz(5)
+nextCollatz(16)
+```
+
+## Part B
+```{r}
+collatzSequence <- function(num) {
+    seq <- c(num)
+    while (num != 1) {
+        num <- nextCollatz(num)
+        seq <- append(seq, num)
+    }
+    return(list(seq,length(seq)))
+}
+
+collatzSequence(5)
+collatzSequence(19)
+```
+
+## Part C
+```{r}
+
+```
