@@ -1,0 +1,23 @@
+---
+title: "Problem Set 1"
+format: pdf
+---
+
+## Problem 1
+
+```{r}
+# environment set up
+pacman::p_load(tidyverse)
+```
+
+### Part A
+
+```{r}
+# data
+abalone_data <- read_csv("hw1/abalone/abalone.data")
+```
+
+### Part B
+```{r}
+table(abalone_data$M)
+```
