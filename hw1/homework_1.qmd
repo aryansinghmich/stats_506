@@ -80,14 +80,50 @@ cor_table
 ```
 
 ## Part E
+```{r}
+#' Function to perform a two-sample Student's t-test
+#' It compares the means of two groups using the pooled-variance formulation
+#' of the two-sample t-test. The function returns group means, the t-statistic,
+#' degrees of freedom, and the p-value for the test.
+#'
+#' @param formula a formula of the form response ~ group, where group has only two levels
+#' @param data a data frame containing the variables in the formula
+#' @return a list of group means, the t-statistic, degrees of freedom, and the p-value for the test
+t_tester <- function(formula, data) {
+  #response ~ group
+  mf <- model.frame(formula, data)
+  y <- mf[[1]]
+  g <- mf[[2]]
+  
+  x <- y[g == unique(g)[1]]
+  z <- y[g == unique(g)[2]]
+  
+  nx <- length(x)
+  nz <- length(z)
+  mx <- mean(x)
+  mz <- mean(z)
+  vx <- var(x)
+  vz <- var(z)
+  
+  sp2 <- ((nx - 1) * vx + (nz - 1) * vz) / (nx + nz - 2) # pooled var
+  t_stat <- (mx - mz) / sqrt(sp2 * (1/nx + 1/nz)) # t test
+  df <- nx + nz - 2 # degrees of freedom
+  p_val <- 2 * pt(-abs(t_stat), df) #2-side p_val
+  
+  return(list(group_means = c(mean1 = mx, mean2 = mz), t_stat = t_stat, df = df,p_value = p_val))
+}
+```
 
 ```{r}
 # M vs F
 t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "F")))
+t_tester(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "F")))
 # M vs I
 t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "I")))
+t_tester(rings ~ sex, data = subset(abalone_data, sex %in% c("M", "I")))
 # F vs I
 t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("F", "I")))
+t_tester(rings ~ sex, data = subset(abalone_data, sex %in% c("F", "I")))
 ```
 
 # Problem 2
