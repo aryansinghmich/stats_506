@@ -43,8 +43,11 @@ cor(weights, abalone_data$rings)
 The weight with the highest correlation with the rings is Shell Weight (R = 0.6275740).
 
 ### 2.
+```{r}
+abalone_data %>% group_by(sex) %>% summarise(correlation = cor(shell_weight, rings), .groups = "drop")
+```
 
-From cor_table (see below, Part D), for Shell Weight, the sex of I has the highest correlation (0.725).
+For Shell Weight, the sex of I has the highest correlation (0.725).
 
 ### 3.
 
@@ -108,11 +111,65 @@ food_expend <- subset(food_expend, currency == "USD")
 nrow(food_expend)
 ```
 
+### Part D
+```{r}
+food_expend <- subset(food_expend, age >= 14)
+```
+
+Subsetted observations age to the legal minimum working age or older (>14yrs old).
+
+### Part E
+```{r}
+food_expend <- subset(food_expend, !(state %in% c("", "AK", "HI")))
+```
+
+Excluded empty state rows. Removed entries from the noncontiguous states (states not connected to the mainland USA), Alaska and Hawaii.
+
+### Part F
+```{r}
+# clean out ~ in data
+food_expend$tot_exp <- gsub("~", "", food_expend$tot_exp)
+food_expend$tot_exp <- as.numeric(food_expend$tot_exp)
+
+# add NAs to empty entries
+exp_cols <- c("tot_exp", "groceries_exp", "dining_out_exp", "misc_exp")
+for (col in exp_cols) {
+  x <- food_expend[[col]]
+  x <- as.character(x)
+  x[x == ""] <- NA
+  food_expend[[col]] <- as.numeric(x)
+}
+
+# drop neg vals
+food_expend <- subset(food_expend, !(groceries_exp < 0 | dining_out_exp < 0 | misc_exp < 0 | tot_exp < 0))
+```
+
+Cleaned the total expenses column to remove unwanted characters (~) and coerce into a numeric. Added NA to the empty entries in the expense columns. 
+Dropped rows that had negative values in the expense columns. 
+
+### Part G
+```{r}
+food_expend <- subset(food_expend, !(dine_out_ct = 30))
+```
+
+Excluded individuals who dined out 30 or more times.
+
+### Part H
+```{r}
+nrow(food_expend)
+```
+
 # Problem 3 - Collatz conjecture
 
 ## Part A
 
 ```{r}
+#' Function to calculate the next Collatz number in sequence given a integer input
+#' It divides input by 2 if the input is even (num/2)
+#' It multiplies input by 3 and then adds 1 if the input is odd (3*num + 1)
+#'
+#' @param num a positive integer numeric
+#' @return The next colltaz number in the sequence based on `num`
 nextCollatz <- function(num){
     if (!is.numeric(num)) {
         stop("Input was not numeric")
@@ -136,6 +193,12 @@ nextCollatz(16)
 ## Part B
 
 ```{r}
+#' Function to generate a Collatz sequence based on integer input
+#' It continues to irratively run `nextCollatz` on the input until it reaches the value of 1.
+#' It returns a list with a vector of the sequence and a numeric with the length of the sequence.
+#'
+#' @param num a positive integer numeric
+#' @return a list with a vector of the Collatz sequence and a numeric for the sequence length
 collatzSequence <- function(num) {
     seq <- c(num)
     while (num != 1) {
