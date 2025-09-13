@@ -2202,8 +2202,7 @@ vertical-align: -.125em;
 </header>
 
 
-<section id="problem-1" class="level1">
-<h1>Problem 1</h1>
+<p><a href="https://github.com/aryansinghmich/stats_506" class="uri">https://github.com/aryansinghmich/stats_506</a></p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -2212,6 +2211,8 @@ vertical-align: -.125em;
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+<section id="problem-1" class="level1">
+<h1>Problem 1</h1>
 <section id="part-a" class="level2">
 <h2 class="anchored" data-anchor-id="part-a">Part A</h2>
 <div class="cell">
@@ -2261,14 +2262,28 @@ shell_weight   0.6275740</code></pre>
 </section>
 <section id="section-1" class="level3">
 <h3 class="anchored" data-anchor-id="section-1">2.</h3>
-<p>From cor_table (see below, Part D), for Shell Weight, the sex of I has the highest correlation (0.725).</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>abalone_data <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(sex) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">correlation =</span> <span class="fu">cor</span>(shell_weight, rings), <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  sex   correlation
+  &lt;chr&gt;       &lt;dbl&gt;
+1 F           0.406
+2 I           0.725
+3 M           0.511</code></pre>
+</div>
+</div>
+<p>For Shell Weight, the sex of I has the highest correlation (0.725).</p>
 </section>
 <section id="section-2" class="level3">
 <h3 class="anchored" data-anchor-id="section-2">3.</h3>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>abalone_data[abalone_data<span class="sc">$</span>rings <span class="sc">==</span> <span class="fu">max</span>(abalone_data<span class="sc">$</span>rings), <span class="fu">c</span>(weight_names, <span class="st">&quot;rings&quot;</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>abalone_data[abalone_data<span class="sc">$</span>rings <span class="sc">==</span> <span class="fu">max</span>(abalone_data<span class="sc">$</span>rings), <span class="fu">c</span>(weight_names, <span class="st">&quot;rings&quot;</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>    whole_weight shucked_weight viscera_weight shell_weight rings
@@ -2288,9 +2303,9 @@ shell_weight   0.6275740</code></pre>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we can use mean here as the input is a vector of TRUE, FALSE which R will treat as 1, 0 </span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># thus mean is equivalent the summing the TRUE entries over all observations</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(abalone_data<span class="sc">$</span>viscera_weight <span class="sc">&gt;</span> abalone_data<span class="sc">$</span>shell_weight) <span class="sc">*</span> <span class="dv">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># we can use mean here as the input is a vector of TRUE, FALSE which R will treat as 1, 0 </span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># thus mean is equivalent the summing the TRUE entries over all observations</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(abalone_data<span class="sc">$</span>viscera_weight <span class="sc">&gt;</span> abalone_data<span class="sc">$</span>shell_weight) <span class="sc">*</span> <span class="dv">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 6.511851</code></pre>
@@ -2304,8 +2319,8 @@ shell_weight   0.6275740</code></pre>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cor_table <span class="ot">&lt;-</span> abalone_data <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(sex) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(weight_names), <span class="sc">~</span> <span class="fu">cor</span>(.x, rings), <span class="at">.names =</span> <span class="st">&quot;{.col}&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>cor_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cor_table <span class="ot">&lt;-</span> abalone_data <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(sex) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(weight_names), <span class="sc">~</span> <span class="fu">cor</span>(.x, rings), <span class="at">.names =</span> <span class="st">&quot;{.col}&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>cor_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 5
@@ -2322,8 +2337,44 @@ shell_weight   0.6275740</code></pre>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M vs F</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;F&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; Function to perform a two-sample Student&#39;s t-test</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; It compares the means of two groups using the pooled-variance formulation</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; of the two-sample t-test. The function returns group means, the t-statistic,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; degrees of freedom, and the p-value for the test.</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param formula a formula of the form response ~ group, where group has only two levels</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param data a data frame containing the variables in the formula</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @return a list of group means, the t-statistic, degrees of freedom, and the p-value for the test</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>t_tester <span class="ot">&lt;-</span> <span class="cf">function</span>(formula, data) {</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">#response ~ group</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  mf <span class="ot">&lt;-</span> <span class="fu">model.frame</span>(formula, data)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> mf[[<span class="dv">1</span>]]</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> mf[[<span class="dv">2</span>]]</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> y[g <span class="sc">==</span> <span class="fu">unique</span>(g)[<span class="dv">1</span>]]</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">&lt;-</span> y[g <span class="sc">==</span> <span class="fu">unique</span>(g)[<span class="dv">2</span>]]</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  nx <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  nz <span class="ot">&lt;-</span> <span class="fu">length</span>(z)</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  mx <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>  mz <span class="ot">&lt;-</span> <span class="fu">mean</span>(z)</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  vx <span class="ot">&lt;-</span> <span class="fu">var</span>(x)</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  vz <span class="ot">&lt;-</span> <span class="fu">var</span>(z)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>  sp2 <span class="ot">&lt;-</span> ((nx <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> vx <span class="sc">+</span> (nz <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> vz) <span class="sc">/</span> (nx <span class="sc">+</span> nz <span class="sc">-</span> <span class="dv">2</span>) <span class="co"># pooled var</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>  t_stat <span class="ot">&lt;-</span> (mx <span class="sc">-</span> mz) <span class="sc">/</span> <span class="fu">sqrt</span>(sp2 <span class="sc">*</span> (<span class="dv">1</span><span class="sc">/</span>nx <span class="sc">+</span> <span class="dv">1</span><span class="sc">/</span>nz)) <span class="co"># t test</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> nx <span class="sc">+</span> nz <span class="sc">-</span> <span class="dv">2</span> <span class="co"># degrees of freedom</span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  p_val <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">pt</span>(<span class="sc">-</span><span class="fu">abs</span>(t_stat), df) <span class="co">#2-side p_val</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">group_means =</span> <span class="fu">c</span>(<span class="at">mean1 =</span> mx, <span class="at">mean2 =</span> mz), <span class="at">t_stat =</span> t_stat, <span class="at">df =</span> df,<span class="at">p_value =</span> p_val))</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M vs F</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;F&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -2340,8 +2391,26 @@ mean in group F mean in group M
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M vs I</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t_tester</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;F&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$group_means
+  mean1   mean2 
+10.7055 11.1293 
+
+$t_stat
+[1] -3.672932
+
+$df
+[1] 2833
+
+$p_value
+[1] 0.0002442194</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M vs I</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -2358,8 +2427,26 @@ mean in group I mean in group M
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># F vs I</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;F&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t_tester</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$group_means
+    mean1     mean2 
+10.705497  7.890462 
+
+$t_stat
+[1] 26.8978
+
+$df
+[1] 2868
+
+$p_value
+[1] 2.659634e-142</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># F vs I</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;F&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -2374,13 +2461,133 @@ sample estimates:
 mean in group F mean in group I 
       11.129304        7.890462 </code></pre>
 </div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t_tester</span>(rings <span class="sc">~</span> sex, <span class="at">data =</span> <span class="fu">subset</span>(abalone_data, sex <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;F&quot;</span>, <span class="st">&quot;I&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>$group_means
+    mean1     mean2 
+11.129304  7.890462 
+
+$t_stat
+[1] 29.55801
+
+$df
+[1] 2647
+
+$p_value
+[1] 3.531401e-166</code></pre>
 </div>
+</div>
+<p>The t-tests show that the mean number of rings differs significantly across sexes. Females have slightly more rings than males, and both have substantially more rings than infants. These differences are all highly significant (p &lt; 0.001), which indicates that sex is associated with abalone age.</p>
 </section>
 </section>
 <section id="problem-2" class="level1">
 <h1>Problem 2</h1>
 <section id="part-a-1" class="level2">
 <h2 class="anchored" data-anchor-id="part-a-1">Part A</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;food_expend/food_expenditure.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="part-b-1" class="level2">
+<h2 class="anchored" data-anchor-id="part-b-1">Part B</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(food_expend) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;age&quot;</span>, <span class="st">&quot;num_food_dependents&quot;</span>, <span class="st">&quot;state&quot;</span>, <span class="st">&quot;currency&quot;</span>, <span class="st">&quot;tot_exp&quot;</span>, <span class="st">&quot;groceries_exp&quot;</span>, <span class="st">&quot;dining_out_exp&quot;</span>, <span class="st">&quot;misc_exp&quot;</span>, <span class="st">&quot;dine_out_ct&quot;</span>, <span class="st">&quot;alcohol_inc&quot;</span>, <span class="st">&quot;program&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="part-c-1" class="level2">
+<h2 class="anchored" data-anchor-id="part-c-1">Part C</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(food_expend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 262</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">subset</span>(food_expend, currency <span class="sc">==</span> <span class="st">&quot;USD&quot;</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(food_expend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 230</code></pre>
+</div>
+</div>
+<section id="part-d-1" class="level3">
+<h3 class="anchored" data-anchor-id="part-d-1">Part D</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">subset</span>(food_expend, age <span class="sc">&gt;=</span> <span class="dv">14</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Subsetted observations age to the legal minimum working age or older (&gt;14yrs old).</p>
+</section>
+<section id="part-e-1" class="level3">
+<h3 class="anchored" data-anchor-id="part-e-1">Part E</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">subset</span>(food_expend, <span class="sc">!</span>(state <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;AK&quot;</span>, <span class="st">&quot;HI&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Excluded empty state rows. Removed entries from the noncontiguous states (states not connected to the mainland USA), Alaska and Hawaii.</p>
+</section>
+<section id="part-f" class="level3">
+<h3 class="anchored" data-anchor-id="part-f">Part F</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clean out ~ in data</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>food_expend<span class="sc">$</span>tot_exp <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;~&quot;</span>, <span class="st">&quot;&quot;</span>, food_expend<span class="sc">$</span>tot_exp)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>food_expend<span class="sc">$</span>tot_exp <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(food_expend<span class="sc">$</span>tot_exp)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="co"># add NAs to empty entries</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>exp_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;tot_exp&quot;</span>, <span class="st">&quot;groceries_exp&quot;</span>, <span class="st">&quot;dining_out_exp&quot;</span>, <span class="st">&quot;misc_exp&quot;</span>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> exp_cols) {</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> food_expend[[col]]</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">as.character</span>(x)</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  x[x <span class="sc">==</span> <span class="st">&quot;&quot;</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  food_expend[[col]] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(x)</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="co"># drop neg vals</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">subset</span>(food_expend, <span class="sc">!</span>(groceries_exp <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">|</span> dining_out_exp <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">|</span> misc_exp <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">|</span> tot_exp <span class="sc">&lt;</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Cleaned the total expenses column to remove unwanted characters (~) and coerce into a numeric. Added NA to the empty entries in the expense columns. Dropped rows that had negative values in the expense columns.</p>
+</section>
+<section id="part-g" class="level3">
+<h3 class="anchored" data-anchor-id="part-g">Part G</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>food_expend <span class="ot">&lt;-</span> <span class="fu">subset</span>(food_expend, <span class="sc">!</span>(<span class="at">dine_out_ct =</span> <span class="dv">30</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Excluded individuals who dined out 30 or more times.</p>
+</section>
+<section id="part-h" class="level3">
+<h3 class="anchored" data-anchor-id="part-h">Part H</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(food_expend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+</section>
 </section>
 </section>
 <section id="problem-3---collatz-conjecture" class="level1">
@@ -2390,51 +2597,63 @@ mean in group F mean in group I
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nextCollatz <span class="ot">&lt;-</span> <span class="cf">function</span>(num){</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.numeric</span>(num)) {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not numeric&quot;</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (num <span class="sc">&lt;</span> <span class="dv">1</span>) {</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not positive&quot;</span>)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (num <span class="sc">%%</span> <span class="dv">1</span> <span class="sc">!=</span> <span class="dv">0</span>) {</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not an integer&quot;</span>)</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (num <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>) {</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(num<span class="sc">/</span><span class="dv">2</span>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="dv">3</span><span class="sc">*</span>num <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="fu">nextCollatz</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; Function to calculate the next Collatz number in sequence given a integer input</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; It divides input by 2 if the input is even (num/2)</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; It multiplies input by 3 and then adds 1 if the input is odd (3*num + 1)</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param num a positive integer numeric</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @return The next colltaz number in the sequence based on `num`</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>nextCollatz <span class="ot">&lt;-</span> <span class="cf">function</span>(num){</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.numeric</span>(num)) {</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not numeric&quot;</span>)</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (num <span class="sc">&lt;</span> <span class="dv">1</span>) {</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not positive&quot;</span>)</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (num <span class="sc">%%</span> <span class="dv">1</span> <span class="sc">!=</span> <span class="dv">0</span>) {</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">stop</span>(<span class="st">&quot;Input was not an integer&quot;</span>)</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (num <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(num<span class="sc">/</span><span class="dv">2</span>)</span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="dv">3</span><span class="sc">*</span>num <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a><span class="fu">nextCollatz</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 16</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nextCollatz</span>(<span class="dv">16</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nextCollatz</span>(<span class="dv">16</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 8</code></pre>
 </div>
 </div>
 </section>
-<section id="part-b-1" class="level2">
-<h2 class="anchored" data-anchor-id="part-b-1">Part B</h2>
+<section id="part-b-2" class="level2">
+<h2 class="anchored" data-anchor-id="part-b-2">Part B</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>collatzSequence <span class="ot">&lt;-</span> <span class="cf">function</span>(num) {</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    seq <span class="ot">&lt;-</span> <span class="fu">c</span>(num)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (num <span class="sc">!=</span> <span class="dv">1</span>) {</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        num <span class="ot">&lt;-</span> <span class="fu">nextCollatz</span>(num)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        seq <span class="ot">&lt;-</span> <span class="fu">append</span>(seq, num)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(seq,<span class="fu">length</span>(seq)))</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="fu">collatzSequence</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; Function to generate a Collatz sequence based on integer input</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; It continues to irratively run `nextCollatz` on the input until it reaches the value of 1.</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; It returns a list with a vector of the sequence and a numeric with the length of the sequence.</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @param num a positive integer numeric</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @return a list with a vector of the Collatz sequence and a numeric for the sequence length</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>collatzSequence <span class="ot">&lt;-</span> <span class="cf">function</span>(num) {</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    seq <span class="ot">&lt;-</span> <span class="fu">c</span>(num)</span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (num <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>        num <span class="ot">&lt;-</span> <span class="fu">nextCollatz</span>(num)</span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>        seq <span class="ot">&lt;-</span> <span class="fu">append</span>(seq, num)</span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(seq,<span class="fu">length</span>(seq)))</span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a><span class="fu">collatzSequence</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
@@ -2445,7 +2664,7 @@ mean in group F mean in group I
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collatzSequence</span>(<span class="dv">19</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collatzSequence</span>(<span class="dv">19</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
@@ -2456,21 +2675,21 @@ mean in group F mean in group I
 </div>
 </div>
 </section>
-<section id="part-c-1" class="level2">
-<h2 class="anchored" data-anchor-id="part-c-1">Part C</h2>
+<section id="part-c-2" class="level2">
+<h2 class="anchored" data-anchor-id="part-c-2">Part C</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>collatz_lens <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">100</span><span class="sc">:</span><span class="dv">500</span>, <span class="cf">function</span>(x) <span class="fu">collatzSequence</span>(x)[[<span class="dv">2</span>]])</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>short_start_val <span class="ot">&lt;-</span> <span class="fu">which.min</span>(collatz_lens) <span class="sc">+</span> <span class="dv">99</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>long_start_val <span class="ot">&lt;-</span> <span class="fu">which.max</span>(collatz_lens) <span class="sc">+</span> <span class="dv">99</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>short_seq_len <span class="ot">&lt;-</span> <span class="fu">min</span>(collatz_lens)</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>long_seq_len <span class="ot">&lt;-</span> <span class="fu">max</span>(collatz_lens)</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">short =</span> <span class="fu">list</span>(<span class="at">start =</span> short_start_val, <span class="at">length =</span> short_seq_len),</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">long  =</span> <span class="fu">list</span>(<span class="at">start =</span> long_start_val,  <span class="at">length =</span> long_seq_len))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>collatz_lens <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">100</span><span class="sc">:</span><span class="dv">500</span>, <span class="cf">function</span>(x) <span class="fu">collatzSequence</span>(x)[[<span class="dv">2</span>]])</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>short_start_val <span class="ot">&lt;-</span> <span class="fu">which.min</span>(collatz_lens) <span class="sc">+</span> <span class="dv">99</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>long_start_val <span class="ot">&lt;-</span> <span class="fu">which.max</span>(collatz_lens) <span class="sc">+</span> <span class="dv">99</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>short_seq_len <span class="ot">&lt;-</span> <span class="fu">min</span>(collatz_lens)</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>long_seq_len <span class="ot">&lt;-</span> <span class="fu">max</span>(collatz_lens)</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(<span class="at">short =</span> <span class="fu">list</span>(<span class="at">start =</span> short_start_val, <span class="at">length =</span> short_seq_len),</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">long =</span> <span class="fu">list</span>(<span class="at">start =</span> long_start_val,  <span class="at">length =</span> long_seq_len))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>$short
@@ -2489,6 +2708,7 @@ $long$length
 [1] 144</code></pre>
 </div>
 </div>
+<p>Between 100 and 500, the shortest Collatz sequence starts at 128 with length 8, while the longest starts at 327 with length 144.</p>
 </section>
 </section>
 

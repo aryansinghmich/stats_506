@@ -7,13 +7,15 @@ format:
     code-fold: true
 ---
 
-# Problem 1
+<https://github.com/aryansinghmich/stats_506>
 
 ```{r}
 # environment set up
 setwd("/Users/aryansingh/Desktop/stats_506_git/hw1")
 pacman::p_load(tidyverse)
 ```
+
+# Problem 1
 
 ## Part A
 
@@ -43,6 +45,7 @@ cor(weights, abalone_data$rings)
 The weight with the highest correlation with the rings is Shell Weight (R = 0.6275740).
 
 ### 2.
+
 ```{r}
 abalone_data %>% group_by(sex) %>% summarise(correlation = cor(shell_weight, rings), .groups = "drop")
 ```
@@ -80,6 +83,7 @@ cor_table
 ```
 
 ## Part E
+
 ```{r}
 #' Function to perform a two-sample Student's t-test
 #' It compares the means of two groups using the pooled-variance formulation
@@ -126,12 +130,14 @@ t.test(rings ~ sex, data = subset(abalone_data, sex %in% c("F", "I")))
 t_tester(rings ~ sex, data = subset(abalone_data, sex %in% c("F", "I")))
 ```
 
+The t-tests show that the mean number of rings differs significantly across sexes. Females have slightly more rings than males, and both have substantially more rings than infants. These differences are all highly significant (p \< 0.001), which indicates that sex is associated with abalone age.
+
 # Problem 2
 
 ## Part A
 
 ```{r}
-food_expend <- read.csv("hw1/food_expend/food_expenditure.csv")
+food_expend <- read.csv("food_expend/food_expenditure.csv")
 ```
 
 ## Part B
@@ -141,6 +147,7 @@ colnames(food_expend) <- c("id", "age", "num_food_dependents", "state", "currenc
 ```
 
 ## Part C
+
 ```{r}
 nrow(food_expend)
 food_expend <- subset(food_expend, currency == "USD")
@@ -148,13 +155,15 @@ nrow(food_expend)
 ```
 
 ### Part D
+
 ```{r}
 food_expend <- subset(food_expend, age >= 14)
 ```
 
-Subsetted observations age to the legal minimum working age or older (>14yrs old).
+Subsetted observations age to the legal minimum working age or older (\>14yrs old).
 
 ### Part E
+
 ```{r}
 food_expend <- subset(food_expend, !(state %in% c("", "AK", "HI")))
 ```
@@ -162,6 +171,7 @@ food_expend <- subset(food_expend, !(state %in% c("", "AK", "HI")))
 Excluded empty state rows. Removed entries from the noncontiguous states (states not connected to the mainland USA), Alaska and Hawaii.
 
 ### Part F
+
 ```{r}
 # clean out ~ in data
 food_expend$tot_exp <- gsub("~", "", food_expend$tot_exp)
@@ -180,10 +190,10 @@ for (col in exp_cols) {
 food_expend <- subset(food_expend, !(groceries_exp < 0 | dining_out_exp < 0 | misc_exp < 0 | tot_exp < 0))
 ```
 
-Cleaned the total expenses column to remove unwanted characters (~) and coerce into a numeric. Added NA to the empty entries in the expense columns. 
-Dropped rows that had negative values in the expense columns. 
+Cleaned the total expenses column to remove unwanted characters (\~) and coerce into a numeric. Added NA to the empty entries in the expense columns. Dropped rows that had negative values in the expense columns.
 
 ### Part G
+
 ```{r}
 food_expend <- subset(food_expend, !(dine_out_ct = 30))
 ```
@@ -191,6 +201,7 @@ food_expend <- subset(food_expend, !(dine_out_ct = 30))
 Excluded individuals who dined out 30 or more times.
 
 ### Part H
+
 ```{r}
 nrow(food_expend)
 ```
@@ -260,5 +271,7 @@ short_seq_len <- min(collatz_lens)
 long_seq_len <- max(collatz_lens)
 
 list(short = list(start = short_start_val, length = short_seq_len),
-  long  = list(start = long_start_val,  length = long_seq_len))
+  long = list(start = long_start_val,  length = long_seq_len))
 ```
+
+Between 100 and 500, the shortest Collatz sequence starts at 128 with length 8, while the longest starts at 327 with length 144.
