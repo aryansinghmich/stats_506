@@ -1,0 +1,42 @@
+---
+title: "Problem Set 2"
+author: "Aryan Singh"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+---
+
+<https://github.com/aryansinghmich/stats_506>
+
+```{r}
+# environment set up
+setwd("/Users/aryansingh/Desktop/stats_506_git/hw2")
+pacman::p_load(tidyverse)
+```
+
+# Problem 1
+```{r}
+# n_steps must be > 0
+random_walk1 <- function(n_steps) {
+    pos <- 0
+    for (i in 1:n_steps) {
+        step <- sample(c(-1, 1), size = 1)
+        if (step == 1) {
+            if (runif(1) <0.05) {
+                step <- 10
+            }
+        } else {
+            if (runif(1) <0.2) {
+                step <- -3
+            }
+        }
+        pos <- pos + step
+    }
+    return(pos)
+}
+
+random_walk2 <- function() {
+
+}
+```
