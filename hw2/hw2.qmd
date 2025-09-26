@@ -12,14 +12,23 @@ format:
 ```{r}
 # environment set up
 setwd("/Users/aryansingh/Desktop/stats_506_git/hw2")
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse, microbenchmark, cowplot)
 ```
 
 # Problem 1
+
+## Part A
 ```{r}
-# n_steps must be > 0
+#' random walk version 1 - loop based
+#'
+#' Simulates a 1D random walk using a loop. Each step is +1 or -1
+#' with equal probability. A +1 step has a 5% chance of being +10,
+#' while a -1 step has a 20% chance of being -3.
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @param seed Optional random seed for reproducibility
+#' @return Final position after n_steps
 random_walk1 <- function(n_steps, seed = NULL) {
-    if (!is.null(seed)) set.seed(seed)
     pos <- 0
     for (i in 1:n_steps) {
         step <- sample(c(-1, 1), size = 1)
@@ -37,8 +46,14 @@ random_walk1 <- function(n_steps, seed = NULL) {
     return(pos)
 }
 
-random_walk2 <- function(n_steps, seed = NULL) {
-    if (!is.null(seed)) set.seed(seed)
+#' random walk version 2 - vectorized
+#'
+#' Simulates the same random walk as `random_walk1`, but uses
+#' vectorized operations instead of a loop
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @return Final position after n_steps
+random_walk2 <- function(n_steps) {
     base_steps <- sample(c(-1, 1), size = n_steps, replace = TRUE)
 
     random_factor <- runif(n_steps)
@@ -48,8 +63,14 @@ random_walk2 <- function(n_steps, seed = NULL) {
     return(sum(steps))
 }
 
-random_walk3 <- function(n_steps, seed = NULL) {
-    if (!is.null(seed)) set.seed(seed)
+#' random walk version 3 - apply function
+#'
+#' Simulates the same random walk as `random_walk1`, but uses
+#' an inner function with `vapply` to generate steps.
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @return Final position after n_steps
+random_walk3 <- function(n_steps) {
     one_step <- function(i) {
         base <- if (runif(1) < 0.5) -1 else 1
         if (base == 1) {
@@ -64,6 +85,109 @@ random_walk3 <- function(n_steps, seed = NULL) {
 ```
 
 ```{r}
+random_walk1(10)
+random_walk2(10)
+random_walk3(10)
+random_walk1(1000)
+random_walk2(1000)
+random_walk3(1000)
+```
+
+## Part B
+```{r}
+#' random walk helper - direction
+#'
+#' Converts uniform draws into base steps (-1 or +1).
+#' This helper is used in the rewritten random walk functions below
+#' to separate direction from modification (-1 turning into -3 or +1 turning into +10)
+#'
+#' @param u_dir Numeric vector of uniform(0,1) draws
+#' @return Vector of -1 or +1 base steps
+u_to_base <- function(u_dir) ifelse(u_dir < 0.5, -1, 1)
+
+#' random walk version 1 - loop based (rewritten with seed)
+#'
+#' Rewrites the earlier loop-based `random_walk1` to include
+#' an optional seed for reproducibility. Pre-generates the random
+#' numbers for direction and modification, then uses a loop
+#' to accumulate the final position.
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @param seed Optional random seed for reproducibility
+#' @return Final position after n_steps
+random_walk1 <- function(n_steps, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  u_dir <- runif(n_steps)
+  u_mod <- runif(n_steps)
+  base_steps <- u_to_base(u_dir)
+
+  pos <- 0
+  for (i in seq_len(n_steps)) {
+    base <- base_steps[i]
+    u <- u_mod[i]
+    step <- if (base == 1) {
+      if (u < 0.05) 10 else 1
+    } else {
+      if (u < 0.20) -3 else -1
+    }
+    pos <- pos + step
+  }
+  pos
+}
+
+#' random walk version 2 - vectorized (rewritten with seed)
+#'
+#' Rewrites the earlier vectorized `random_walk2` to include
+#' an optional seed for reproducibility. Uses pre-generated
+#' random draws for direction and modification, then applies
+#' vectorized ifelse logic.
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @param seed Optional random seed for reproducibility
+#' @return Final position after n_steps
+random_walk2 <- function(n_steps, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  u_dir <- runif(n_steps)
+  u_mod <- runif(n_steps)
+  base_steps <- u_to_base(u_dir)
+
+  steps <- ifelse(base_steps == 1,
+                  ifelse(u_mod < 0.05, 10, 1),
+                  ifelse(u_mod < 0.20, -3, -1))
+  sum(steps)
+}
+
+#' random walk version 3 - apply function (rewritten with seed)
+#'
+#' Rewrites the earlier apply-based `random_walk3` to include
+#' an optional seed for reproducibility. Uses pre-generated
+#' random draws and an inner function with vapply to calculate
+#' the steps.
+#'
+#' @param n_steps Number of steps (must be > 0)
+#' @param seed Optional random seed for reproducibility
+#' @return Final position after n_steps
+random_walk3 <- function(n_steps, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  u_dir <- runif(n_steps)
+  u_mod <- runif(n_steps)
+  base_steps <- u_to_base(u_dir)
+
+  one_step <- function(i) {
+    base <- base_steps[i]
+    u <- u_mod[i]
+    if (base == 1) {
+      if (u < 0.05) 10 else 1
+    } else {
+      if (u < 0.20) -3 else -1
+    }
+  }
+
+  sum(vapply(seq_len(n_steps), one_step, numeric(1)))
+}
+```
+
+```{r}
 random_walk1(10, 999)
 random_walk2(10, 999)
 random_walk3(10, 999)
@@ -72,7 +196,182 @@ random_walk2(1000, 999)
 random_walk3(1000, 999)
 ```
 
+## Part C
+```{r}
+b1k <- microbenchmark(
+  loop = random_walk1(1000, seed = 981),
+  vectorized = random_walk2(1000, seed = 981),
+  apply = random_walk3(1000, seed = 981)
+)
+
+b100k <- microbenchmark(
+  loop = random_walk1(100000, seed = 981),
+  vectorized = random_walk2(100000, seed = 981),
+  apply = random_walk3(100000, seed = 981)
+)
+
+print(summary(b1k), digits = 3)
+print(summary(b100k), digits = 3)
+```
+
+The benchmarking shows that both the loop and vectorized implementations perform similarly and efficiently, with vectorization offering a slight advantage at larger inputs. The apply-based version is consistently much slower, especially at the larger inputs.
+
+## Part D
+```{r}
+# Monte Carlo
+simulate_p0 <- function(n_steps, n_sims, seed) {
+  set.seed(seed)
+
+  totals <- replicate(n_sims, random_walk2(n_steps)) # using fastest function
+
+  k <- sum(totals == 0L)
+  phat <- k / n_sims
+  se <- sqrt(phat * (1 - phat) / n_sims)
+  ci <- phat + c(-1, 1) * 1.96 * se
+
+  data.frame(n_steps = n_steps, simulations = n_sims, zero_count = k,
+    p_hat = phat, std_error = se, ci95_low = max(0, ci[1]), ci95_high = min(1, ci[2]))
+}
+
+res_10   <- simulate_p0(10, n_sims = 1e5, seed = 987)
+res_100  <- simulate_p0(100, n_sims = 1e5, seed = 987)
+res_1000 <- simulate_p0(1000, n_sims = 1e5, seed = 987)
+
+results <- rbind(res_10, res_100, res_1000)
+print(results, row.names = FALSE, digits = 6)
+```
+
+The Monte Carlo simulation shows that the probability of the walk ending at zero decreases as the number of steps increases. With 10 steps, the chance is about 13%, dropping to a little less than 2% for 100 steps and less than 1% for 1000 steps. This pattern shows how the distribution spreads out as the walk gets longer thus making it way less likely to land exactly at zero.
+
+# Problem 2
+```{r}
+set.seed(10887)
+mcrep <- 1e6
+
+tot <- rowSums(matrix(rpois(mcrep * 8, 1),  ncol = 8)) +
+       pmax(0, round(rnorm(mcrep, mean = 60, sd = sqrt(12)))) +
+       rowSums(matrix(rpois(mcrep * 8, 8),  ncol = 8)) +
+       pmax(0, round(rnorm(mcrep, mean = 60, sd = sqrt(12)))) +
+       rowSums(matrix(rpois(mcrep * 6, 12), ncol = 6))
+
+est <- mean(tot) # Monte Carlo estimate E[cars/day]
+se  <- sd(tot) / sqrt(mcrep) # MC standard error (CLT)
+ci  <- est + c(-1, 1) * 1.96 * se # 95% CI
+
+c(estimate = est, mc_se = se, ci_low = ci[1], ci_high = ci[2])
+```
+
+# Problem 3
+
+## Part A
+```{r}
+youtube <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-03-02/youtube.csv')
+dim(youtube) # before
+
+drop_cols <- c("brand", "superbowl_ads_dot_com_url", "youtube_url",
+               "id", "etag", "published_at", "title",
+               "description", "thumbnail", "channel_title")
+
+youtube <- youtube[, !(names(youtube) %in% drop_cols)]
+dim(youtube) # after
+```
+
 ## Part B
 ```{r}
+vars <- c("view_count", "like_count", "dislike_count", "favorite_count", "comment_count")
+summary(youtube %>% select(all_of(vars)))
+```
 
+Based on this summary of variables, favorite_count has all values at 0 (with a few NAs) and thus has no explanatory power becuase it has no variation (cannot be modeled effectively as an outcome)
+
+```{r}
+raw1 <- ggplot(youtube, aes(x = view_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "View Count (raw)")
+
+raw2 <- ggplot(youtube, aes(x = like_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Like Count (raw)")
+
+raw3 <- ggplot(youtube, aes(x = dislike_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Dislike Count (raw)")
+
+raw4 <- ggplot(youtube, aes(x = comment_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Comment Count (raw)")
+
+raw_plot <- plot_grid(raw1, raw2, raw3, raw4, ncol = 2)
+raw_plot
+```
+
+The histograms of the other raw count variables show that the data is heavily right-skewed, with most commercials clustered at very low counts and a few with extremely large values. As they are, these variables are extremely skewed and would need a log transformation before using them to model outcomes.
+
+
+```{r}
+# use log1p (log(x+1)) instead of log(x) so that zero counts are handled safely;
+# plain log(0) would produce -Inf values and break the lm models in Part C
+youtube$log_view_count <- log1p(youtube$view_count)
+youtube$log_like_count <- log1p(youtube$like_count)
+youtube$log_dislike_count <- log1p(youtube$dislike_count)
+youtube$log_comment_count <- log1p(youtube$comment_count)
+
+log1 <- ggplot(youtube, aes(x = log_view_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "View Count (log)")
+
+log2 <- ggplot(youtube, aes(x = log_like_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Like Count (log)")
+
+log3 <- ggplot(youtube, aes(x = log_dislike_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Dislike Count (log)")
+
+log4 <- ggplot(youtube, aes(x = log_comment_count)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
+  labs(title = "Comment Count (log)")
+
+log_plot <- plot_grid(log1, log2, log3, log4, ncol = 2)
+log_plot
+```
+
+After the log transformation, the distributions look much more balanced and less skewed, making them much more suitable for use as outcomes in linear regression models. Though dislike count and comment count still have right skewed distributions after transformation we will continue to use them as outcome variables.
+
+## Part C
+```{r}
+predictors <- "funny + show_product_quickly + patriotic + celebrity + danger + animals + use_sex + year"
+
+# fit models
+# NA values rows are dropped based on the outcome variable column in order to run lm
+m_view <- lm(as.formula(paste("log_view_count ~", predictors)),
+                data = subset(youtube, !is.na(log_view_count)))
+m_like <- lm(as.formula(paste("log_like_count ~", predictors)), 
+                data = subset(youtube, !is.na(log_like_count)))
+m_dis <- lm(as.formula(paste("log_dislike_count ~", predictors)),
+                data = subset(youtube, !is.na(log_dislike_count)))
+m_comm <- lm(as.formula(paste("log_comment_count ~", predictors)),
+                data = subset(youtube, !is.na(log_comment_count)))
+
+summary(m_view)
+summary(m_like)
+summary(m_dis)
+summary(m_comm)
+```
+
+Across the four models, most ad variables were not statistically significant predictors of the ad's engagement on youtube once year was controlled for. For views, no predictors reached significance. For likes, year was a significant positive predictor (newer ads tended to receive more likes) and danger-themed ads were marginally positive (p ~ 0.09; danger-themed ads tended to receive more likes). For dislikes, year was again a significant positive predictor (newer ads tended to receive more dislikes), while patriotic ads were borderline positive (p ~ 0.05; patriotic ads tended to receive more dislikes). For comments, most were insignificant, though year showed a marginally positive association. Overall, the main consistent finding is that ad engagement (both positive and negative) has increased over time, while other variables like humor, animals, or celebrity presence did not have strong effects.
+
+## Part D
+```{r}
+f_view <- as.formula(paste("log_view_count ~", predictors))
+
+X <- model.matrix(f_view, data = youtube[!is.na(youtube$log_view_count), ])
+y <- youtube$log_view_count[!is.na(youtube$log_view_count)]
+
+beta_hat <- solve(t(X) %*% X, t(X) %*% y)
+beta_hat_qr <- qr.solve(X, y) # alternative way to solve
+
+coef_lm <- coef(m_view) # from Part C
+
+print(cbind(lm = coef_lm, beta_hat = as.numeric(beta_hat), beta_hat_qr = as.numeric(beta_hat_qr)))
 ```
