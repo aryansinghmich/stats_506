@@ -12,38 +12,375 @@ format:
 ```{r}
 # environment set up
 setwd("/Users/aryansingh/Desktop/stats_506_git/hw3")
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse, haven, pscl, broom, knitr, DBI, RSQLite, microbenchmark, stringr)
 ```
 
 # Problem 1
 
 ## Part A
+```{r}
+aux <- read_xpt("./cdc/AUX_I.xpt")
+demo <- read_xpt("./cdc/DEMO_I.xpt")
+
+cdc_data <- merge(aux, demo, by = "SEQN", all = FALSE)
+dim(cdc_data)
+```
 
 ## Part B
+```{r}
+income_lbl <- c("$0 to $4,999", "$5,000 to $9,999", "$10,000 to $14,999", "$15,000 to $19,999",
+    "$20,000 to $24,999", "$25,000 to $34,999", "$35,000 to $44,999", "$45,000 to $54,999",
+    "$55,000 to $64,999", "$65,000 to $74,999", "$75,000 to $99,999", "$100,000 and Over")
+
+cdc_data <- cdc_data %>% mutate(
+    # gender
+    RIAGENDR = factor(RIAGENDR, levels = 1:2, labels = c("Male", "Female")), 
+    # citizenship
+    DMDCITZN = na_if(DMDCITZN, 9), 
+    DMDCITZN = na_if(DMDCITZN, 7),
+    DMDCITZN = factor(DMDCITZN, levels = 1:2, labels = c("Citizen", "Not a U.S. Citizen")),
+    # no. of children <5 yrs
+    DMDHHSZA = factor(DMDHHSZA, levels = 0:3, labels = c("0","1","2","3 or more")), 
+    # annual income
+    INDHHIN2 = na_if(INDHHIN2, 77),
+    INDHHIN2 = na_if(INDHHIN2, 99),
+    INDHHIN2 = na_if(INDHHIN2, 12), # $20,000 and Over -> NA
+    INDHHIN2 = na_if(INDHHIN2, 13), # Under $20,000 -> NA
+    INDHHIN2 = factor(INDHHIN2, levels = c(1:10, 14:15), labels = income_lbl),
+    INDHHIN2 = fct_relevel(INDHHIN2, income_lbl)
+)
+```
+
+I dropped "$20,000 and Over" and "Under $20,000" responses (codes 12 & 13) as NA to avoid overlapping categories and then put an ascending order on the remaining, non-overlapping income ranges. This ends up losing 438 annual household income entries.
 
 ## Part C
+```{r}
+# make rename variables and make continous
+cdc_data <- cdc_data %>% mutate(
+    kids_under5 = dplyr::recode(DMDHHSZA, "0"=0L, "1"=1L, "2"=2L, "3 or more"=3L, .default = NA_integer_),
+    income_mid = dplyr::recode(INDHHIN2,
+      "$0 to $4,999"=2500L, "$5,000 to $9,999"=7500L, "$10,000 to $14,999"=12500L,
+      "$15,000 to $19,999"=17500L, "$20,000 to $24,999"=22500L, "$25,000 to $34,999"=30000L,
+      "$35,000 to $44,999"=40000L, "$45,000 to $54,999"=50000L, "$55,000 to $64,999"=60000L,
+      "$65,000 to $74,999"=70000L, "$75,000 to $99,999"=87500L, "$100,000 and Over"=125000L,
+      .default = NA_integer_),
+      gender  = droplevels(RIAGENDR),
+      citizen = droplevels(DMDCITZN)
+    )
+```
+
+```{r}
+fit_pois <- function(df, resp, rhs, label){
+  fml <- reformulate(rhs, response = resp)
+  dat <- df %>% select(all_of(c(resp, rhs))) %>% na.omit()
+  mod <- glm(fml, family = poisson(link="log"), data = dat)
+  list(label = label, model = mod, n = nrow(dat),
+    stats = tibble(Model = label, N = nrow(dat), `Pseudo_R^2` = unname(pscl::pR2(mod)["McFadden"]), AIC = AIC(mod)),
+    coefs = broom::tidy(mod, conf.int = TRUE, exponentiate = TRUE) %>% filter(term != "(Intercept)") %>%
+      transmute(Model = label, Term = term, IRR = estimate, CI_low = conf.low, CI_high = conf.high, p = p.value)
+  )
+}
+
+mods <- list(
+  fit_pois(cdc_data, "AUXTWIDR", c("gender"), 
+           label = "1R: right ear ~ gender"),
+  fit_pois(cdc_data, "AUXTWIDR", c("gender","citizen","kids_under5","income_mid"),
+           label = "2R: right ~ gender+citizenship+kids+income"),
+  fit_pois(cdc_data, "AUXTWIDL", c("gender"),
+           label = "1L: left ear ~ gender"),
+  fit_pois(cdc_data, "AUXTWIDL", c("gender","citizen","kids_under5","income_mid"),
+           label = "2L: left ~ gender+citizenship+kids+income")
+)
+
+coef_tab  <- map_dfr(mods, "coefs") %>% mutate(
+    Term = str_replace(Term, "^gender", "Gender: "),
+    Term = str_replace(Term, "^citizen", "Citizen: "),
+    Term = str_replace(Term, "^kids_under5$", "Children <=5 (count)"),
+    Term = str_replace(Term, "^income_mid$", "Household income (midpoint)")
+  ) %>% mutate(across(c(IRR, CI_low, CI_high, p), ~round(.x, 3)))
+
+stats_tab <- map_dfr(mods, "stats") %>% mutate(across(c(`Pseudo_R^2`, AIC), ~round(.x, 3)))
+
+kable(coef_tab, caption = "Incidence rate ratios (Poisson). IRR = exp(beta).")
+kable(stats_tab, caption = "Model sizes and fit stats.")
+```
 
 ## Part D
+```{r}
+m2L <- mods[[4]]
+summary(m2L$model)
+
+coef(summary(m2L$model))["genderFemale", ] %>% kable()
+
+# summarize pop averages for context
+cdc_summary <- cdc_data %>% summarise(
+    mean_kids = mean(kids_under5, na.rm = TRUE),
+    mean_income = mean(income_mid, na.rm = TRUE)
+)
+
+kable(cdc_summary)
+
+# build comparison dataset
+newdat <- data.frame(
+  gender = c("Male", "Female"),
+  citizen = "Citizen",  # majority group
+  kids_under5 = rep(cdc_summary$mean_kids, 2),
+  income_mid = rep(cdc_summary$mean_income, 2)
+)
+
+# pred expect tymp width
+preds <- predict(m2L$model, newdata = newdat, type = "response", se.fit = TRUE)
+
+preds_df <- data.frame(
+  gender = newdat$gender,
+  predicted_width = preds$fit,
+  lower_CI = preds$fit - 1.96 * preds$se.fit,
+  upper_CI = preds$fit + 1.96 * preds$se.fit
+)
+
+kable(preds_df)
+```
+
+In Model 2L, the coefficient for Gender (Female) was statistically significant (beta = 0.0188, SE = 0.0036, z = 5.22, p < 0.001).  Exponentiating this coefficient yields an incidence rate ratio (IRR) of 1.019, indicating that, controlling for citizenship status, number of children under 5, and household income, females have approximately 1.9 % higher tympanometric width in the left ear compared to males.
+
+The predicted mean tympanometric width for males was 83.86 (95 % CI 83.40 – 84.32) and for females 85.45 (95 % CI 85.02 – 85.88). Because the difference between these predicted means is consistent with the direction and significance of the IRR, there is strong statistical evidence that tympanometric width of the left ear differs by gender, with females exhibiting slightly larger widths on average.
 
 # Problem 2
+```{r}
+sakila <- dbConnect(SQLite(), "sakila/sakila_master.db")
+```
 
 ## Part A
+```{r}
+sql_a <- function() {
+    dbGetQuery(sakila, "
+        SELECT
+            store_id,
+            COUNT(*) AS n_customers,
+            ROUND(100.0 * AVG(
+                CASE
+                WHEN active IN (1, '1', 'Y', 'y', 'T', 't') THEN 1
+                ELSE 0
+                END
+            ), 2) AS pct_active
+        FROM customer
+        GROUP BY store_id
+        ORDER BY store_id
+    ")
+}
+
+kable(sql_a())
+```
+
+```{r}
+r_a <- function() {
+    customer <- dbGetQuery(sakila, "SELECT store_id, active FROM customer")
+
+    customer %>% mutate(active_num = as.integer(active == 1)) %>%
+        group_by(store_id) %>% summarise(
+            n_customers = n(),
+            pct_active  = round(100 * mean(active_num, na.rm = TRUE), 2),
+            .groups = "drop"
+        ) %>% arrange(store_id)
+}
+
+kable(r_a())
+```
+
+```{r}
+#| warning: false
+microbenchmark(r_a(), sql_a(), times = 50L)
+```
+
+Each store has a similar number of customers (326 for Store 1 and 273 for Store 2) with about 97.5% of customers active for both. The SQL method was significantly faster than the R data-frame approach.
 
 ## Part B
+```{r}
+sql_b <- function() {
+    dbGetQuery(sakila, "
+        SELECT
+            s.staff_id,
+            s.first_name,
+            s.last_name,
+            co.country
+        FROM staff AS s
+        JOIN address AS a  ON s.address_id = a.address_id
+        JOIN city    AS ci ON a.city_id = ci.city_id
+        JOIN country AS co ON ci.country_id = co.country_id
+        ORDER BY s.staff_id
+    ")
+}
+
+kable(sql_b())
+```
+
+```{r}
+r_b <- function() {
+    staff <- dbGetQuery(sakila, "SELECT staff_id, first_name, last_name, address_id FROM staff")
+    address <- dbGetQuery(sakila, "SELECT address_id, city_id FROM address")
+    city <- dbGetQuery(sakila, "SELECT city_id, country_id FROM city")
+    country <- dbGetQuery(sakila, "SELECT country_id, country FROM country")
+
+    staff %>%
+        left_join(address, by = "address_id") %>%
+        left_join(city, by = "city_id") %>%
+        left_join(country, by = "country_id") %>%
+        select(staff_id, first_name, last_name, country) %>% arrange(staff_id)
+}
+
+kable(r_b())
+```
+
+```{r}
+microbenchmark(r_b(), sql_b(), times = 50L)
+```
+
+The SQL method was significantly faster than the R data-frame approach.
 
 ## Part C
+```{r}
+sql_c <- function() {
+    dbGetQuery(sakila, "
+        WITH film_revenue AS (
+            SELECT
+                f.film_id,
+                f.title,
+                SUM(p.amount) AS revenue
+            FROM payment  AS p
+            JOIN rental   AS r  ON p.rental_id   = r.rental_id
+            JOIN inventory AS i ON r.inventory_id = i.inventory_id
+            JOIN film     AS f  ON i.film_id      = f.film_id
+            GROUP BY f.film_id, f.title
+        )
+        SELECT title, revenue
+        FROM film_revenue
+        WHERE revenue = (SELECT MAX(revenue) FROM film_revenue)
+        ORDER BY title
+    ")
+}
+
+kable(sql_c())
+```
+
+```{r}
+r_c <- function() {
+    payment <- dbGetQuery(sakila, "SELECT rental_id, amount FROM payment")
+    rental <- dbGetQuery(sakila, "SELECT rental_id, inventory_id FROM rental")
+    inventory <- dbGetQuery(sakila, "SELECT inventory_id, film_id FROM inventory")
+    film <- dbGetQuery(sakila, "SELECT film_id, title FROM film")
+
+    payment %>%
+        left_join(rental, by = "rental_id") %>%
+        left_join(inventory, by = "inventory_id") %>%
+        left_join(film, by = "film_id") %>%
+        group_by(film_id, title) %>%
+        summarise(revenue = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+        filter(revenue == max(revenue)) %>%
+        arrange(title) %>%
+        select(title, revenue)
+}
+
+kable(r_c())
+```
+
+```{r}
+microbenchmark(r_c(), sql_c(), times = 50L)
+```
+
+The film *TELEGRAPH VOYAGE* generated the highest total rental revenue. In this example, the R-based approach was slightly faster than the SQL query.
 
 # Problem 3
+```{r}
+#| message: false
+australia <- read_csv("./australia/au-500.csv")
+```
 
 ## Part A
+```{r}
+australia %>% transmute(web = str_remove(web, "/+$")) %>% 
+    summarise(pct = mean(str_detect(web, regex("\\.com$", ignore_case = TRUE))) * 100) %>%
+    pull(pct) %>% round(2)
+
+australia %>% transmute(
+    ending = case_when(
+      str_detect(web, regex("\\.com\\.au$", ignore_case = TRUE)) ~ ".com.au",
+      str_detect(web, regex("\\.com$", ignore_case = TRUE)) ~ ".com",
+      TRUE ~ "other"
+    )) %>% count(ending, sort = TRUE) %>% kable()
+```
+
+0% of the websites end exactly in “.com”. All URLs included the ending “.com.au” instead.
 
 ## Part B
+```{r}
+australia %>% mutate(domain = str_extract(email, "(?<=@)[^@]+$")) %>%
+    count(domain, sort = TRUE) %>% slice_max(n, n = 3) %>% kable()
+```
+
+The most common email domain is hotmail.com (n = 114).
 
 ## Part C
+```{r}
+australia %>%
+    mutate(
+        non_alpha = str_detect(company_name, "[^A-Za-z,\\s]"),
+        non_alpha_no_amp = str_detect(company_name, "[^A-Za-z,\\s&]")
+    ) %>%
+    summarise(
+        pct_non_alpha = mean(non_alpha) * 100,
+        pct_non_alpha_no_amp = mean(non_alpha_no_amp) * 100
+    ) %>% mutate(across(everything(), \(x) round(x, 2))) %>%
+    kable()
+```
+
+About 9% of company names contain at least one non-alphabetic character (excluding commas and spaces). When ampersands (&) are also excluded, only 0.8% contain other non-alphabetic characters.
 
 ## Part D
+```{r}
+australia %>% mutate(
+        # remove any non-digits, then reformat as 4-3-3
+        phone1 = str_replace_all(phone1, "\\D", ""),
+        phone2 = str_replace_all(phone2, "\\D", ""),
+        phone1 = str_replace(phone1, "^(\\d{4})(\\d{3})(\\d{3})$", "\\1-\\2-\\3"),
+        phone2 = str_replace(phone2, "^(\\d{4})(\\d{3})(\\d{3})$", "\\1-\\2-\\3")
+    ) %>% select(phone1, phone2) %>% slice_head(n = 10) %>% kable()
+```
 
 ## Part E
+```{r}
+apt_data <- australia %>% mutate(
+        apt_num = str_extract(address, "(\\d+)$"),
+        apt_num = as.numeric(apt_num)
+    ) %>% filter(!is.na(apt_num), apt_num > 0)   
+
+ggplot(apt_data, aes(x = log(apt_num))) +
+    geom_histogram(bins = 20, fill = "blue", color = "white") +
+    labs(title = "Histogram of log(Apartment Numbers)",
+        x = "log(Apartment Number)",
+        y = "Count")
+```
 
 ## Part F
+```{r}
+benford_data <- apt_data %>%
+  mutate(first_digit = as.numeric(str_sub(apt_num, 1, 1))) %>%
+  count(first_digit) %>%
+  mutate(
+    prop = n / sum(n),
+    benford = log10(1 + 1 / first_digit)
+  )
 
+# plot comparison
+ggplot(benford_data, aes(x = factor(first_digit))) +
+  geom_col(aes(y = prop), fill = "blue") +
+  geom_point(aes(y = benford), color = "red", size = 3) +
+  geom_line(aes(y = benford, group = 1), color = "red") +
+  labs(
+    title = "Benford’s Law vs. Observed Apartment Number Distribution",
+    x = "Leading Digit",
+    y = "Proportion",
+    caption = "Blue bars = observed; red line = Benford’s expected"
+  )
+```
+
+The leading digit frequencies of apartment numbers appear to deviate significantly from Benford’s Law. The observed distribution is roughly uniform rather than decreasing from 1 to 9. Thus, these apartment numbers would not pass as real world data.
