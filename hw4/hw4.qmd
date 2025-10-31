@@ -1,0 +1,213 @@
+---
+title: "hw4"
+author: "Aryan Singh"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+---
+
+<https://github.com/aryansinghmich/stats_506>
+
+```{r}
+# environment set up
+setwd("/Users/aryansingh/Desktop/stats_506_git/hw3")
+pacman::p_load(tidyverse, nzelect, knitr, infer)
+```
+
+# Problem 1
+
+## Part A
+
+```{r}
+nzge %>% group_by(election_year, voting_type) %>%
+  summarise(total_votes = sum(votes, na.rm = T), .groups = "drop") %>%
+  arrange(desc(total_votes)) %>% 
+  rename(`Election Year` = election_year, `Voting Type` = voting_type, `Total Votes` = total_votes) %>% kable()
+```
+
+## Part B
+
+```{r}
+nzge %>% filter(election_year == 2014, voting_type == "Candidate") %>% group_by(party) %>%
+  summarise(total_votes = sum(votes, na.rm = T), .groups = "drop") %>%
+  mutate(percent_of_vote = 100 * total_votes / sum(total_votes)) %>%
+  arrange(desc(percent_of_vote)) %>% 
+  rename(`Party` = party, `Total Votes` = total_votes, `Percent of Vote` = percent_of_vote) %>% kable()
+```
+
+## Part C
+
+```{r}
+nzge %>% group_by(election_year, voting_type, party) %>%
+  summarise(total_votes = sum(votes, na.rm = T), .groups = "drop") %>%
+  group_by(election_year, voting_type) %>%
+  slice_max(order_by = total_votes, n = 1, with_ties = F) %>% ungroup() %>%
+  pivot_wider(names_from = voting_type,
+              values_from = c(party, total_votes),
+              names_sep = "_") %>%
+  arrange(election_year) %>%
+  rename(`Election Year` = election_year, `Winning Candidate` = party_Candidate, `Winning Party` = party_Party, `Candidate Votes` = total_votes_Candidate, `Party Votes` = total_votes_Party) %>% kable()
+```
+
+# Problem 2
+
+```{r}
+atp_2019 <- read_csv("https://raw.githubusercontent.com/JeffSackmann/tennis_atp/refs/heads/master/atp_matches_2019.csv")
+```
+
+## Part A
+
+```{r}
+atp_2019 %>% distinct(tourney_id, tourney_name, tourney_level) %>% 
+  arrange(tourney_level, tourney_name) %>%  
+  summarise(num_tournaments = n()) %>% kable()
+```
+
+There were 128 ATP tournaments in 2019 in this dataset.
+
+## Part B
+
+```{r}
+multi_winners <- atp_2019 %>% filter(round == "F") %>%
+  group_by(winner_name) %>%
+  summarise(num_tournaments_won = n_distinct(tourney_id), .groups = "drop") %>%
+  filter(num_tournaments_won > 1) %>%
+  arrange(desc(num_tournaments_won))
+multi_winners %>% kable()
+
+multi_winners %>% summarise(num_players_more_than_one = n(), max_tournaments_won = max(num_tournaments_won)) %>% kable()
+```
+
+In the 2019 ATP season, 12 players won more than one tournament. The players with the highest number of tournament victories were Dominic Thiem and Novak Djokovic, with each winning 5 tournaments.
+
+## Part C
+
+```{r}
+aces_long <- atp_2019 %>% select(w_ace, l_ace) %>%
+  pivot_longer(cols = c(w_ace, l_ace),
+               names_to = "player_type",
+               values_to = "aces") %>%
+  mutate(player_type = if_else(player_type == "w_ace", "Winner", "Loser")) %>%
+  drop_na(aces)
+
+
+aces_long %>% group_by(player_type) %>%
+  summarise(mean_aces = mean(aces, na.rm = T),
+            sd_aces = sd(aces, na.rm = T),
+            n = n()) %>% kable()
+
+obs_diff <- aces_long %>%
+  specify(aces ~ player_type) %>%
+  calculate(stat = "diff in means", order = c("Winner", "Loser")) %>%
+  pull(stat)
+
+null_dist <- aces_long %>%
+  specify(aces ~ player_type) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 5000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("Winner", "Loser"))
+
+p_val <- null_dist %>% get_p_value(obs_stat = obs_diff, direction = "greater")
+
+tibble(observed_diff = obs_diff, p_value = p_val$p_value) %>% kable()
+```
+
+The average number of aces for winners (~ 7.50) is statistically higher than for losers (~ 5.79), yielding an observed mean difference of 1.70 aces per match (permutation test produced a p-value ~ 0)
+
+## Part D
+
+```{r}
+atp_2019 %>%
+  pivot_longer(cols = c(winner_name, loser_name), names_to = "match_result", values_to = "player_name") %>%
+  mutate(is_win = if_else(match_result == "winner_name", 1, 0)) %>%
+  group_by(player_name) %>%
+  summarise(matches = n(), wins = sum(is_win, na.rm = T), win_rate = wins / matches, .groups = "drop") %>%
+  filter(matches >= 5) %>% filter(win_rate == max(win_rate)) %>% arrange(desc(win_rate)) %>% kable()
+```
+
+Rafael Nadal had the highest win rate among players with at least five matches in 2019. He played 69 matches and won 60, giving him a win rate of approximately ~0.87 (86.96%).
+
+# Problem 3
+
+```{r}
+covid <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/refs/heads/master/rolling-averages/us-states.csv")
+```
+
+## Part A
+
+```{r}
+covid %>% group_by(date) %>%
+  summarise(avg_cases = mean(cases_avg, na.rm = T)) %>%
+  ggplot(aes(x = date, y = avg_cases)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_hline(yintercept = 2500, linetype = "dashed", color = "gray40") +
+  geom_hline(yintercept = 1000, linetype = "dashed", color = "gray40") +
+  labs(title = "U.S. COVID-19 Cases (Weekly Rolling Average)",
+    x = "Date",
+    y = "Average Daily Cases per State",
+    caption = "Source: New York Times COVID-19 Rolling Averages Dataset"
+  ) + theme(plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 12),
+    axis.title = element_text(size = 13),
+    panel.grid.minor = element_blank()
+  )
+```
+
+There were approximately 3 major (over 2500 average daily cases per state) and 4 minor (over 1000 average daily cases per state) spikes in COVID-19 cases between 2020 and 2023. The Omicron wave in early 2022 stands out as the largest peak.
+
+## Part B
+
+```{r}
+covid %>% group_by(state) %>%
+  mutate(total_per_100k = sum(cases_avg_per_100k, na.rm = T)) %>%
+  ungroup() %>%
+  filter(total_per_100k %in% range(total_per_100k)) %>%
+  ggplot(aes(x = date, y = cases_avg_per_100k)) +
+  geom_line(linewidth = 1) +
+  geom_smooth(se = FALSE, linewidth = 0.7, linetype = "dashed") +
+  facet_wrap(~ state, ncol = 1, scales = "fixed") +
+  labs(title = "COVID-19 Trajectories for States with Lowest vs Highest Per-Capita Burden",
+    x = "Date",
+    y = "New Cases per 100,000 (weekly avg)",
+    caption = "Source: New York Times COVID-19 Rolling Averages Dataset"
+  ) + theme(plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    legend.position = "none",
+    panel.grid.minor = element_blank()
+  )
+```
+
+Rhode Island (highest per-capita burden) shows frequent, sharp, and high-amplitude spikes, including a major surge during the Omicron wave in early 2022 that reached over 500 new cases per 100,000. Maine (lowest per-capita burden) has a flatter, steadier trajectory with smaller peaks and lower overall case rates throughout the pandemic.
+
+## Part C
+
+```{r}
+# first 5 states to cross 1 case per 100k
+first_five <- covid %>% group_by(state) %>%
+  summarise(first_significant_date = min(date[cases_avg_per_100k > 1], na.rm = T)) %>%
+  arrange(first_significant_date) %>%
+  slice_head(n = 5) %>% pull(state)
+
+covid %>%
+  filter(state %in% first_five) %>%
+  ggplot(aes(x = date, y = cases_avg_per_100k, color = state)) +
+  geom_line(linewidth = 0.8) +
+  scale_color_brewer(palette = "Set1") + 
+  coord_cartesian(xlim = as.Date(c("2020-01-01", "2021-08-01"))) +
+  labs(title = "First Five States to Cross 1 New Case per 100k",
+    x = "Date",
+    y = "New Cases per 100,000 (7-day avg)",
+    color = "State",
+    caption = "Source: New York Times COVID-19 Rolling Averages Dataset"
+  ) + theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 12),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+The first five states to experience substantial COVID-19 spread were Washington, New York, New Jersey, Louisiana, and Guam. Washington, New York, and New Jersey showed the earliest sharp rises marking the first major U.S. outbreak, followed soon after by Guam and Louisiana. Guam exhibited early fluctuations due to its smaller population. Overall, these states highlight how the pandemic began in coastal and highly connected regions before spreading nationwide.
