@@ -1,0 +1,597 @@
+---
+title: "hw5"
+author: "Aryan Singh"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+---
+
+<https://github.com/aryansinghmich/stats_506>
+
+```{r}
+# environment set up
+pacman::p_load(tidyverse, knitr, plotly)
+```
+
+# Problem 1
+
+## Part A
+
+```{r}
+#' Wald-style normal approximation Confidence interval
+#'
+#' @slot mean estimated mean
+#' @slot sterr std error
+#' @slot level conf level in (0, 1)
+#' @slot lb lower conf bound
+#' @slot ub upper conf bound
+#' @export
+setClass(
+  "waldCI",
+  slots = list(
+    mean = "numeric",
+    sterr = "numeric",
+    level = "numeric",
+    lb = "numeric",
+    ub = "numeric"
+  ),
+  validity = function(object) {
+    msgs <- character()
+
+    if (length(object@mean)  != 1L || !is.finite(object@mean))
+      msgs <- c(msgs, "mean must be a single finite numeric")
+    if (length(object@sterr) != 1L || !is.finite(object@sterr) || object@sterr <= 0)
+      msgs <- c(msgs, "sterr must be a single positive numeric")
+    if (length(object@level) != 1L || !is.finite(object@level) ||
+        object@level <= 0 || object@level >= 1)
+      msgs <- c(msgs, "level must be in (0, 1)")
+    if (length(object@lb) != 1L || length(object@ub) != 1L ||
+        !is.finite(object@lb) || !is.finite(object@ub))
+      msgs <- c(msgs, "lb and ub must be single finite numerics")
+    if (object@lb >= object@ub)
+      msgs <- c(msgs, "lb must be strictly less than ub")
+    if (!(object@mean >= object@lb && object@mean <= object@ub))
+      msgs <- c(msgs, "mean must lie inside [lb, ub]")
+
+    if (length(msgs)) msgs else T
+  }
+)
+
+#' Constructor for waldCI objects
+#'
+#' @param level conf level in (0, 1)
+#' @param mean opt mean
+#' @param sterr opt std error
+#' @param lb opt lower bound
+#' @param ub opt upper bound
+#'
+#' @return A \code{waldCI} object
+#' @examples
+#' wald_ci(level = 0.95, mean = 0, sterr = 1)
+#' wald_ci(level = 0.9, lb = -1.64, ub = 1.64)
+#' @export
+wald_ci <- function(level = 0.95,
+                    mean = NULL,
+                    sterr = NULL,
+                    lb = NULL,
+                    ub = NULL) {
+  have_mean_se <- !is.null(mean) && !is.null(sterr)
+  have_bounds  <- !is.null(lb) && !is.null(ub)
+
+  if (have_mean_se && have_bounds) {
+    stop("specify either (mean, sterr) or (lb, ub), not both")
+  }
+  if (!have_mean_se && !have_bounds) {
+    stop("need either (mean, sterr) or (lb, ub)")
+  }
+
+  if (have_mean_se) {
+    mean <- as.numeric(mean)
+    sterr <- as.numeric(sterr)
+    z <- qnorm((1 + level) / 2)
+    lb <- mean - z * sterr
+    ub <- mean + z * sterr
+  } else {
+    lb <- as.numeric(lb)
+    ub <- as.numeric(ub)
+    mean <- (lb + ub) / 2
+    z <- qnorm((1 + level) / 2)
+    sterr <- (ub - mean) / z
+  }
+
+  obj <- methods::new(
+    "waldCI",
+    mean = mean,
+    sterr = sterr,
+    level = level,
+    lb = lb,
+    ub = ub
+  )
+  validObject(obj)
+  obj
+}
+
+# show 
+
+#' @export
+setMethod(
+  "show", "waldCI",
+  function(object) {
+    cat("waldCI\n")
+    cat("level:", object@level, "\n")
+    cat("mean:", object@mean,  "\n")
+    cat("se:", object@sterr, "\n")
+    cat("CI: [", object@lb, ", ", object@ub, "]\n", sep = "")
+  }
+)
+
+# accessors + setters 
+
+if (!isGeneric("lb")) {
+  #' @export
+  setGeneric("lb", function(x) standardGeneric("lb"))
+}
+#' @export
+setMethod("lb", "waldCI", function(x) x@lb)
+
+if (!isGeneric("ub")) {
+  #' @export
+  setGeneric("ub", function(x) standardGeneric("ub"))
+}
+#' @export
+setMethod("ub", "waldCI", function(x) x@ub)
+
+## mean generic alr exists
+#' @export
+setMethod("mean", "waldCI", function(x, ...) x@mean)
+
+if (!isGeneric("sterr")) {
+  #' @export
+  setGeneric("sterr", function(x) standardGeneric("sterr"))
+}
+#' @export
+setMethod("sterr", "waldCI", function(x) x@sterr)
+
+if (!isGeneric("level")) {
+  #' @export
+  setGeneric("level", function(x) standardGeneric("level"))
+}
+#' @export
+setMethod("level", "waldCI", function(x) x@level)
+
+# setters (replace methods)
+
+if (!isGeneric("lb<-")) {
+  #' @export
+  setGeneric("lb<-", function(x, value) standardGeneric("lb<-"))
+}
+#' @export
+setReplaceMethod(
+  "lb", "waldCI",
+  function(x, value) {
+    x@lb <- as.numeric(value)
+    validObject(x)
+    x
+  }
+)
+
+if (!isGeneric("ub<-")) {
+  #' @export
+  setGeneric("ub<-", function(x, value) standardGeneric("ub<-"))
+}
+#' @export
+setReplaceMethod(
+  "ub", "waldCI",
+  function(x, value) {
+    x@ub <- as.numeric(value)
+    validObject(x)
+    x
+  }
+)
+
+if (!isGeneric("mean<-")) {
+  #' @export
+  setGeneric("mean<-", function(x, value) standardGeneric("mean<-"))
+}
+
+#' @export
+setReplaceMethod(
+  "mean", "waldCI",
+  function(x, value) {
+    x@mean <- as.numeric(value)
+    validObject(x)
+    x
+  }
+)
+
+if (!isGeneric("sterr<-")) {
+  #' @export
+  setGeneric("sterr<-", function(x, value) standardGeneric("sterr<-"))
+}
+#' @export
+setReplaceMethod(
+  "sterr", "waldCI",
+  function(x, value) {
+    x@sterr <- as.numeric(value)
+    validObject(x)
+    x
+  }
+)
+
+if (!isGeneric("level<-")) {
+  #' @export
+  setGeneric("level<-", function(x, value) standardGeneric("level<-"))
+}
+#' @export
+setReplaceMethod(
+  "level", "waldCI",
+  function(x, value) {
+    x@level <- as.numeric(value)
+    validObject(x)
+    x
+  }
+)
+
+# contains() 
+
+if (!isGeneric("contains")) {
+  #' Check if a value is inside a waldCI
+  #'
+  #' @param ci A \code{waldCI} object.
+  #' @param x  Numeric vector.
+  #'
+  #' @return Logical vector indicating if value is in the CI
+  #' @examples
+  #' ci <- wald_ci(mean = 0, sterr = 1)
+  #' contains(ci, c(-2, 0, 2))
+  #' @export
+  setGeneric("contains", function(ci, x) standardGeneric("contains"))
+}
+
+#' @export
+setMethod(
+  "contains",
+  signature(ci = "waldCI", x = "numeric"),
+  function(ci, x) {
+    x >= lb(ci) & x <= ub(ci)
+  }
+)
+
+# overlap() 
+
+if (!isGeneric("overlap")) {
+  #' Check if two waldCI objects overlap
+  #'
+  #' @param ci1 First \code{waldCI}.
+  #' @param ci2 Second \code{waldCI}.
+  #'
+  #' @return Logical: TRUE if intervals overlap
+  #' @examples
+  #' ci1 <- wald_ci(mean = 0, sterr = 1)
+  #' ci2 <- wald_ci(mean = 0.5, sterr = 1)
+  #' overlap(ci1, ci2)
+  #' @export
+  setGeneric("overlap", function(ci1, ci2) standardGeneric("overlap"))
+}
+
+#' @export
+setMethod(
+  "overlap",
+  signature(ci1 = "waldCI", ci2 = "waldCI"),
+  function(ci1, ci2) {
+    max(lb(ci1), lb(ci2)) <= min(ub(ci1), ub(ci2))
+  }
+)
+
+# as.numeric 
+
+#' @export
+setMethod(
+  "as.numeric", "waldCI",
+  function(x, ...) {
+    c(lb(x), ub(x))
+  }
+)
+
+# transformCI 
+
+if (!isGeneric("transformCI")) {
+  #' Transform a confidence interval
+  #'
+  #' Applies a (typically monotone) function to the bounds and returns
+  #' a new \code{waldCI}.
+  #'
+  #' @param f  Function to transform with
+  #' @param x  A \code{waldCI} object
+  #'
+  #' @return A transformed \code{waldCI}
+  #' @export
+  setGeneric("transformCI", function(f, x) standardGeneric("transformCI"))
+}
+
+#' @export
+setMethod(
+  "transformCI",
+  signature(f = "function", x = "waldCI"),
+  function(f, x) {
+    warning("Only monotone transformations preserve the order of the interval")
+    new_lb <- f(lb(x))
+    new_ub <- f(ub(x))
+
+    bounds <- sort(c(new_lb, new_ub))
+    new_lb <- bounds[1L]
+    new_ub <- bounds[2L]
+
+    z <- qnorm((1 + level(x)) / 2)
+    new_mean  <- (new_lb + new_ub) / 2
+    new_sterr <- (new_ub - new_mean) / z
+
+    new_show <- methods::new(
+      "waldCI",
+      mean = new_mean,
+      sterr = new_sterr,
+      level = level(x),
+      lb = new_lb,
+      ub = new_ub
+    )
+    validObject(new_show)
+    new_show
+  }
+)
+```
+
+## Part B
+
+```{r}
+ci1 <- wald_ci(level = 0.95, lb = 17.2, ub = 24.7)
+ci2 <- wald_ci(level = 0.99, mean = 13, sterr = 2.5)
+ci3 <- wald_ci(level = 0.75, lb = 27.43, ub = 39.22)
+
+ci1
+ci2
+ci3
+
+as.numeric(ci1)
+as.numeric(ci2)
+as.numeric(ci3)
+
+lb(ci2)
+ub(ci2)
+mean(ci1)
+sterr(ci3)
+level(ci2)
+
+lb(ci2)   <- 10.5
+mean(ci3) <- 34
+level(ci3) <- 0.8
+
+contains(ci1, 17)
+contains(ci3, 44)
+overlap(ci1, ci2)
+
+eci1 <- transformCI(sqrt, ci1)
+eci1
+
+mean(transformCI(log, ci2))
+```
+
+## Part C
+
+```{r}
+# negative standard error
+try(wald_ci(level = 0.95, mean = 0, sterr = -1))
+
+# lb > ub
+try(wald_ci(level = 0.95, lb = 5, ub = 1))
+
+# infinite bounds via lb/ub
+try(wald_ci(level = 0.95, lb = -Inf, ub = 1))
+try(wald_ci(level = 0.95, lb = -10, ub = Inf))
+
+# infinite standard error
+try(wald_ci(level = 0.95, mean = 0, sterr = Inf))
+
+# invalid use of setters
+ci_ok <- wald_ci(level = 0.95, mean = 10, sterr = 1.5)
+
+# make sterr invalid
+try(sterr(ci_ok) <- -0.2)
+
+# make bounds invalid: lb > ub
+try({
+  lb(ci_ok) <- 20
+  ub(ci_ok) <- 15
+})
+
+# make level invalid
+try(level(ci_ok) <- 1.2)
+
+# make mean fall outside [lb, ub]
+ci_ok2 <- wald_ci(level = 0.9, lb = 0, ub = 1)
+try(mean(ci_ok2) <- 5)
+```
+
+# Problem 3
+
+```{r}
+covid <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/refs/heads/master/rolling-averages/us-states.csv")
+```
+
+The plots generated for this problem are plotly replicas to the submission in problem set 4 for Parts A & B. The answers thus are also replicated from the previous assignment. 
+
+## Part A
+
+```{r}
+covid_avg <- covid %>%
+  group_by(date) %>%
+  summarise(avg_cases = mean(cases_avg, na.rm = T), .groups = "drop")
+
+date_range <- range(covid_avg$date, na.rm = T)
+
+p3A <- plot_ly(
+    covid_avg,
+    x = ~date, y = ~avg_cases,
+    type = "scatter", mode = "lines",
+    line = list(color = "steelblue", width = 2),
+    showlegend = F
+  ) %>%
+  add_lines(
+    x = date_range, y = rep(2500, 2),
+    inherit = F,
+    line = list(color = "gray40", dash = "dash", width = 1),
+    showlegend = F
+  ) %>%
+  add_lines(
+    x = date_range, y = rep(1000, 2),
+    inherit = F,
+    line = list(color = "gray40", dash = "dash", width = 1),
+    showlegend = F
+  ) %>%
+  layout(
+    title = "U.S. COVID-19 Cases (Weekly Rolling Average)",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "Average Daily Cases per State"),
+    annotations = list(
+      x = 0, y = -0.15, xref = "paper", yref = "paper",
+      text = "Source: New York Times COVID-19 Rolling Averages Dataset",
+      showarrow = F,
+      font = list(size = 10)
+    ), 
+    margin = list(b = 80))
+
+p3A
+```
+
+There were approximately 3 major (over 2500 average daily cases per state) and 4 minor (over 1000 average daily cases per state) spikes in COVID-19 cases between 2020 and 2023. The Omicron wave in early 2022 stands out as the largest peak.
+
+## Part B
+
+```{r}
+covid_b <- covid %>% group_by(state) %>%
+  mutate(total_per_100k = sum(cases_avg_per_100k, na.rm = T)) %>%
+  ungroup()
+
+extreme_states <- covid_b %>% distinct(state, total_per_100k) %>%
+  filter(total_per_100k %in% range(total_per_100k)) %>%
+  pull(state)
+
+covid_ext <- covid_b %>% filter(state %in% extreme_states) %>%
+  group_by(state) %>%
+  arrange(date) %>%
+  mutate(date_num = as.numeric(date),
+    smooth = predict(stats::loess(cases_avg_per_100k ~ date_num, span = 0.2))) %>%
+  ungroup()
+
+plots_state <- lapply(extreme_states, function(st) {
+  df <- covid_ext %>% filter(state == st)
+
+  plot_ly(
+    df,
+    x = ~date, y = ~cases_avg_per_100k,
+    type = "scatter", mode = "lines",
+    line = list(width = 1.5),
+    showlegend = F
+  ) %>%
+    add_lines(
+      y = ~smooth,
+      line = list(dash = "dash", width = 1),
+      showlegend = F
+    ) %>%
+    layout(
+      xaxis = list(title = "Date"),
+      yaxis = list(title = paste0(st, ": Cases / 100k"))
+    )
+})
+
+p3B <- subplot(
+  plots_state,
+  nrows = 2, shareX = T, shareY = T, titleY = T
+) %>%
+  layout(
+    title = "COVID-19 Trajectories for States with Lowest vs Highest Per-Capita Burden",
+    annotations = list(
+      x = 0, y = -0.15, xref = "paper", yref = "paper",
+      text = "Source: New York Times COVID-19 Rolling Averages Dataset",
+      showarrow = F,
+      font = list(size = 10)
+    ), 
+    margin = list(b = 80))
+
+p3B 
+```
+
+Rhode Island (highest per-capita burden) shows frequent, sharp, and high-amplitude spikes, including a major surge during the Omicron wave in early 2022 that reached over 500 new cases per 100,000. Maine (lowest per-capita burden) has a flatter, steadier trajectory with smaller peaks and lower overall case rates throughout the pandemic.
+
+## Part C
+
+```{r}
+first_dates <- covid %>%
+  group_by(state) %>%
+  summarise(
+    first_significant_date = suppressWarnings(
+      min(date[cases_avg_per_100k > 1], na.rm = T)
+    ),
+    .groups = "drop"
+  ) %>% arrange(first_significant_date)
+
+first_five_states <- first_dates %>%
+  slice_head(n = 5) %>%
+  pull(state)
+
+covid_early <- covid %>%
+  filter(date <= as.Date("2020-08-01"))
+
+background_data <- covid_early %>%
+  filter(!state %in% first_five_states)
+
+highlight_data <- covid_early %>%
+  filter(state %in% first_five_states)
+
+p3C <- plot_ly() %>%
+  add_trace(
+    data = background_data,
+    x = ~date, y = ~cases_avg_per_100k,
+    type = "scatter", mode = "lines",
+    split = ~state,
+    line = list(color = "rgba(180,180,180,0.5)", width = 0.6),
+    hoverinfo = "none",
+    showlegend = F
+  ) %>%
+  add_trace(
+    data = highlight_data,
+    x = ~date, y = ~cases_avg_per_100k,
+    type = "scatter", mode = "lines",
+    split = ~state,
+    line = list(width = 2),
+    showlegend = T
+  ) %>%
+  add_lines(
+    x = range(covid_early$date, na.rm = T),
+    y = c(1, 1),
+    inherit = F,
+    line = list(color = "gray40", dash = "dash", width = 1),
+    showlegend = F
+  ) %>%
+  layout(
+    title = "First Five States to Cross 1 New Case per 100k",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "New Cases per 100,000 (7-day avg)"),
+    legend = list(
+      title = list(text = "State"),
+      orientation = "h",
+      x = 0.5, xanchor = "center",
+      y = -0.1, yanchor = "top"
+    ),
+    annotations = list(
+      x = 0, y = -0.2, xref = "paper", yref = "paper",
+      text = "Source: New York Times COVID-19 Rolling Averages Dataset",
+      showarrow = F,
+      font = list(size = 10)
+    ),
+    margin = list(b = 80))
+
+p3C
+```
+
+The first five states to show substantial COVID-19 spread were Washington, New York, New Jersey, Guam, and Louisiana. Washington and New York rose earliest and most sharply, followed very closely by New Jersey. Guam exhibited early fluctuations due to its smaller population. Louisiana trailed just after these but still crosses the threshold ahead of most states. Overall, these states highlight how the pandemic began in coastal and highly connected regions before spreading nationwide.
