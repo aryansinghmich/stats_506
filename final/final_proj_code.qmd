@@ -1,0 +1,177 @@
+---
+title: "Final Project"
+author: "Aryan Singh"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+---
+
+```{r}
+pacman::p_load(tidyverse, knitr, GEOquery, Biobase, limma, survival, glmnet, survminer)
+```
+
+<https://github.com/aryansinghmich/stats_506>
+
+# read data and normalize
+
+```{r}
+gse <- getGEO("GSE7390", GSEMatrix = TRUE)
+eset <- gse[[1]]
+
+ph <- pData(eset)
+X <- exprs(eset)
+
+summary(as.vector(X))[c("Min.", "1st Qu.", "Median", "3rd Qu.", "Max.")] #appears log2 like
+
+X_norm <- normalizeBetweenArrays(X, method = "quantile")
+
+common <- intersect(colnames(X_norm), rownames(ph))
+ph <- ph[common, , drop = F]
+X_norm <- X_norm[, common, drop = F]
+
+x <- t(X_norm)
+stopifnot(identical(rownames(ph), rownames(x)))
+```
+
+# pca plot (supp)
+
+```{r}
+gene_var <- apply(X_norm, 1, var, na.rm = T)
+top_genes <- names(sort(gene_var, decreasing = T))[1:2000]
+
+pca <- prcomp(t(X_norm[top_genes, ]), center = T, scale. = T)
+
+evt <- factor(ph$`e.rfs:ch1`, levels = c("0", "1"),
+  labels = c("No relapse (censored)", "Relapse event")
+)
+
+pca_df <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], status = evt)
+
+pca_gg <- ggplot(pca_df, aes(x = PC1, y = PC2, color = status)) +
+  geom_point(size = 2, alpha = 0.85) +
+  theme_classic() +
+  labs(
+    title = "PCA of GSE7390 (top 2000 variable probes)",
+    x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 1), "%)"),
+    y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 1), "%)"),
+    color = "Relapse-free survival status"
+  ) + theme(legend.position = "bottom")
+pca_gg
+
+ggsave("./figures/supp_pca.png", plot = pca_gg, width = 6.5, height = 5, dpi = 300)
+```
+
+# survival setup
+
+```{r}
+time <- as.numeric(ph$`t.rfs:ch1`)
+event <- as.numeric(ph$`e.rfs:ch1`)
+
+surv_obj <- Surv(time = time, event = event)
+
+table(event)
+summary(time)
+surv_obj[1:10]
+```
+
+# cv plot (supp)
+
+```{r}
+x_use <- x[, apply(x, 2, sd, na.rm = T) > 1e-6, drop = F]
+
+set.seed(121)
+foldid <- sample(rep(1:10, length.out = nrow(x_use)))
+
+set.seed(123)
+cvfit_en <- cv.glmnet(x_use, surv_obj,
+  family = "cox", alpha = 0.5,
+  foldid = foldid, standardize = T,
+  lambda.min.ratio = 1e-4
+)
+
+K <- 20
+nz <- sapply(cvfit_en$lambda, function(lam)
+  sum(as.vector(coef(cvfit_en, s = lam)) != 0))
+
+valid <- which(nz >= K)
+(length(valid) > 0) 
+
+idx_star <- valid[which.min(cvfit_en$cvm[valid])]
+lambda_star <- cvfit_en$lambda[idx_star]
+lambda_star
+sum(as.vector(coef(cvfit_en, s = lambda_star)) != 0)
+
+cv_df <- tibble(lambda = cvfit_en$lambda, cvm = cvfit_en$cvm, cvsd = cvfit_en$cvsd, nz = cvfit_en$nzero) %>% mutate(loglam = log(lambda))
+
+cv_gg <- ggplot(cv_df, aes(x = -loglam, y = cvm)) +
+  geom_errorbar(aes(ymin = cvm - cvsd, ymax = cvm + cvsd), width = 0, alpha = 0.4) +
+  geom_point(size = 0.9) +
+  geom_vline(xintercept = -log(lambda_star), linetype = 2) +
+  theme_classic() +
+  labs(title = "Elastic Net Cox CV (alpha = 0.5)", x = expression(-log(lambda)), y = "Partial Likelihood Deviance") +
+  theme(plot.title = element_text(margin = margin(b = 10)))
+cv_gg
+
+ggsave("./figures/supp_cv_plot.png", plot = cv_gg, width = 7, height = 5, dpi = 300)
+```
+
+# risk scores and c-index
+
+```{r}
+risk_score <- as.numeric(predict(cvfit_en, newx = x_use, s = lambda_star, type = "link"))
+cindex <- concordance(surv_obj ~ risk_score)$concordances
+summary(risk_score)
+cindex
+
+risk_group <- factor(ifelse(risk_score >= median(risk_score), "High risk", "Low risk"), levels = c("Low risk", "High risk"))
+table(risk_group)
+```
+
+# figure 1 (main)
+
+```{r}
+km_fit <- survfit(surv_obj ~ risk_group)
+
+km_gg <- ggsurvplot(km_fit, data = data.frame(risk_group = risk_group),
+  pval = T, risk.table = T, conf.int = F,
+  legend.title = "Genomic risk group",
+  legend.labs = c("Low risk", "High risk"),
+  xlab = "Time (days)",
+  ylab = "Relapse-free survival probability"
+)
+km_gg
+
+ggsave("./figures/figure1_km.png", plot = km_gg$plot, width = 8, height = 5, dpi = 300)
+ggsave("./figures/figure1_km_risktable.png", plot = km_gg$table, width = 8, height = 2.2, dpi = 300)
+```
+
+# figure 2 (main)
+
+```{r}
+b <- as.matrix(coef(cvfit_en, s = lambda_star))
+
+coef_df <- data.frame(gene = rownames(b), beta = as.numeric(b)) %>%
+  filter(beta != 0) %>%
+  mutate(abs_beta = abs(beta)) %>%
+  arrange(desc(abs_beta))
+
+annot <- fData(eset) %>%
+  select(ID, `Gene Symbol`) %>%
+  rename(probe = ID, gene_symbol = `Gene Symbol`)
+
+annot$gene_symbol <- gsub(" ///.*", "", annot$gene_symbol)
+annot$gene_symbol[annot$gene_symbol == ""] <- annot$probe
+
+plot_df <- coef_df %>%
+  left_join(annot, by = c("gene" = "probe")) %>%
+  mutate(label = ifelse(is.na(gene_symbol) | gene_symbol == "", gene, gene_symbol),
+         direction = ifelse(beta > 0, "Higher risk", "Lower risk")) %>%
+  slice_head(n = 20) %>%
+  mutate(label = factor(label, levels = rev(label)))
+
+ggplot(plot_df, aes(x = label, y = beta, fill = direction)) + geom_col() + coord_flip() + theme_classic() +
+  labs(title = "Top elastic net cox coefficients", x = "Gene", y = "Cox coefficient (log hazard ratio)")
+
+ggsave("./figures/figure2_top_coeffs.png", plot = last_plot(), width = 7, height = 5, dpi = 300)
+```
